@@ -24,20 +24,34 @@ def main():
 
     wait = WebDriverWait(driver, 10)
     wait.until(EC.title_contains("Recent Updates"))
-    driver.implicitly_wait(5)
+    driver.implicitly_wait(10)
     driver.get("https://www.goodreads.com/book/show/36642458-skyward")
 
+    # Press all more to expand reviews
+    # mores = driver.find_elements_by_xpath('//a[contains(text(), "{0}") and @class="inner"]'.format("...more"))
+
     els = driver.find_elements_by_class_name("friendReviews")
+    driver.implicitly_wait(0)
+
     for el in els:
         try:
             stars = el.find_element_by_class_name("staticStars")
             print("numstars", len(stars.find_elements_by_class_name("staticStar")))
         except NoSuchElementException:
             continue
+        try:
+            more = el.find_element_by_link_text("...more")
+            more.click()
+            print("found more")
 
+        except NoSuchElementException:
+            pass
+
+        wait.until(lambda _: el.find_elements_by_css_selector("span[id^='freeTextContainer'")[0].get_attribute(
+            "innerHTML").strip() != "")
         texts = el.find_elements_by_css_selector("span[id^='freeTextContainer'")
-        text = texts[0]
-        print(text.text)
+        text = texts[0].get_attribute("innerHTML")
+        print(text)
 
     print(len(els))
 
