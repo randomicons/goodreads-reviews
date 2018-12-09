@@ -1,17 +1,15 @@
-import re
 import os
-from selenium import webdriver
 import sys
-import pandas as pd
 
+import pandas as pd
+from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.ui import WebDriverWait
 
 num_revs_per_book = 200
-num_books = 30 - 8
+num_books = 10
 df_revs = pd.DataFrame(columns=["book", "author", "rating", "review"])
 
 
@@ -34,15 +32,15 @@ def main():
         create_book_links(driver)
 
     with open("book_links.txt", "r") as file:
-        links = file.readlines()[0:num_books]
+        links = file.readlines()[33:33 + num_books]
 
     rev_i = 0
     for link in links:
-        rev_i = get_reviews(link, driver, df_revs, rev_i)
-    df_revs.to_csv("data.csv")
+        rev_i = get_reviews(link, driver, rev_i)
+    df_revs.to_csv("data.csv", mode='a')
 
 
-def get_reviews(book_url, driver, df_revs, rev_i):
+def get_reviews(book_url, driver, rev_i):
     driver.get(book_url)
     driver.implicitly_wait(10)
     bookTitle = driver.find_element_by_id("bookTitle").get_attribute("innerHTML")
