@@ -11,7 +11,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as ec
 
 num_revs_per_book = 200
-num_books = 30
+num_books = 30 - 8
 df_revs = pd.DataFrame(columns=["book", "author", "rating", "review"])
 
 
