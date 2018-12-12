@@ -23,7 +23,17 @@ def remove_html_tags(df):
     return df
 
 
+def remove_punct_digit(df):
+    import re
+    df['review'] = df['review'].apply(lambda x: re.sub(r"['.*&^%$#@<>+=_~`?!,:;()\-\n\"]", ' ', x.lower()))
+    df['review'] = df['review'].apply(lambda x: re.sub(r"\d+", 'num', x.lower()))
+    df['review'] = df['review'].apply(lambda x: re.sub(r"  +", ' ', x))
+    return df
+
+
 if __name__ == '__main__':
     df = pd.read_csv("data.csv", index_col=['index'])
+    df['review'] = df['review'].astype(str)
     df = remove_html_tags(remove_non_english(df))
+    df = remove_punct_digit(df)
     df.to_csv("data.csv")
