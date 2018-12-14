@@ -1,31 +1,37 @@
 import pickle
 
-import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sns
 import umap
+from nltk import pos_tag
+from nltk import sent_tokenize
+from nltk import word_tokenize
+from summa import keywords
 
-from util import run_or_get_pkl
+from util import run_or_get_pkl, plot
 
-plt.rc("font", size=16)
-sns.set_style("white")
+num_phrases = 5
 
 
-def plot(frame):
-    """
-    Takes a plottable frame with labels and plots a scatter graph
-    """
-    sns.lmplot(
-        data=frame,
-        x="x",
-        y="y",
-        hue="label",
-        fit_reg=False,
-        legend=True,
-        legend_out=True,
-        scatter_kws={"alpha": 0.8, "s": 4},
-    )
-    plt.show()
+def top_phrases_summa(revs):
+    rev_combined = "\n".join(revs)
+    kws = keywords.keywords(rev_combined, split=True, ratio=.1)
+    # Gets only adjectives
+    kws = list(
+        filter(lambda phrase: any(map(lambda w: w[1].startswith(("JJ", "RB")), pos_tag(word_tokenize(phrase)))), kws))
+    return kws
+
+
+def revs_of_phrase(revs, phrases):
+    return list(filter(lambda rev: any(map(lambda phr: phr in rev, phrases)), revs))
+
+
+def sents_of_phrase(revs, phrases):
+    sents = [sent for rev in revs for sent in sent_tokenize(rev)]
+    phr_sents = {}
+    for phr in phrases:
+        phr_sents[phr] = [sent for sent in sents if phr in sent]
+
+    return phr_sents
 
 
 def umap_vis():
@@ -35,13 +41,20 @@ def umap_vis():
     df = pd.read_csv("data.csv", index_col='index')
     umap_feats = run_or_get_pkl(
         "umap_bow_all.p",
-        lambda: umap.UMAP(n_neighbors=10, min_dist=0.001, n_components=2).fit_transform(
-            X
-        ),
+        lambda: umap.UMAP(n_neighbors=10, min_dist=0.001, n_components=2).fit_transform(X),
     )
     frame = pd.DataFrame({"x": umap_feats[:, 0], 'y': umap_feats[:, 1], "label": df['rating'].values})
     plot(frame)
 
 
+def umap_vis_by_book():
+    with open('bow_book.p', "rb") as file:
+        x_list = pickle.load(file)
+    for title, rest in pd.read_csv("data.csv", index_col='index').groupby('book'):
+        umap_feats = umap.UMAP(n_neighbors=10, min_dist=0.001, n_components=2).fit_transform(x_list[title])
+        frame = pd.DataFrame({"x": umap_feats[:, 0], 'y': umap_feats[:, 1], "label": rest['rating']})
+        plot(frame)
+
+
 if __name__ == "__main__":
-    umap_vis()
+    umap_vis_by_book()
