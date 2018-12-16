@@ -36,6 +36,6 @@ def plot(frame):
         fit_reg=False,
         legend=True,
         legend_out=True,
-        scatter_kws={"alpha": 0.8, "s": 4},
+        scatter_kws={"alpha": 0.8, "s": 50},
     )
     plt.show()

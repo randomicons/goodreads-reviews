@@ -2,11 +2,11 @@ import pickle
 
 import pandas as pd
 import umap
-from nltk import pos_tag
+from nltk import pos_tag, BigramCollocationFinder, BigramAssocMeasures
+from nltk.corpus import stopwords
 from nltk import sent_tokenize
 from nltk import word_tokenize
 from summa import keywords
-
 from util import run_or_get_pkl, plot
 
 num_phrases = 5
@@ -14,11 +14,27 @@ num_phrases = 5
 
 def top_phrases_summa(revs):
     rev_combined = "\n".join(revs)
-    kws = keywords.keywords(rev_combined, split=True, ratio=.1)
+    kws = keywords.keywords(rev_combined, split=True, ratio=.5)
     # Gets only adjectives
     kws = list(
-        filter(lambda phrase: any(map(lambda w: w[1].startswith(("JJ", "RB")), pos_tag(word_tokenize(phrase)))), kws))
+        filter(lambda phrase: any(map(lambda w: not w[1].startswith(("NN")), pos_tag(word_tokenize(phrase)))), kws))
+    kws = list(filter(lambda phrase: len(word_tokenize(phrase)) > 1, kws))
     return kws
+
+
+def top_phrases_nltk(revs):
+    revs = '.\n'.join(revs)
+    bigram_measures = BigramAssocMeasures()
+    tokens = word_tokenize(revs)
+    finder = BigramCollocationFinder.from_words(tokens)
+    finder.apply_freq_filter(3)
+    finder.apply_word_filter(lambda w: len(w) < 2 or w in stopwords.words("english"))
+    colloc = []
+    for tup in finder.nbest(bigram_measures.pmi, 50):
+        pos = pos_tag(tup)
+        if pos[0][1].startswith(("JJ", "RB")) or pos[1][1].startswith(("JJ", "RB")):
+            colloc.append(tup)
+    return colloc
 
 
 def revs_of_phrase(revs, phrases):
@@ -56,5 +72,15 @@ def umap_vis_by_book():
         plot(frame)
 
 
+def main():
+    df = pd.read_csv("data.csv", index_col='index')
+    book_sent_map = {}
+    for title, revs in df.groupby('book'):
+        revs = revs['review'].values
+        phrases = top_phrases_summa(revs)[:5]
+        book_sent_map[title] = sents_of_phrase(revs, phrases)
+    print(book_sent_map)
+
+
 if __name__ == "__main__":
-    umap_vis_by_book()
+    main()

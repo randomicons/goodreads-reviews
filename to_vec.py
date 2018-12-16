@@ -11,7 +11,7 @@ def create_vec_with_all(df):
     :return: numpy array of tf-idf vectors
     """
     with open("bow_all.p", 'wb') as file:
-        pickle.dump(TfidfVectorizer().fit_transform(df['review'].values.astype('U')), file,
+        pickle.dump(TfidfVectorizer().fit_transform(df['review_c'].values.astype('U')), file,
                     protocol=pickle.HIGHEST_PROTOCOL)
 
 
@@ -22,7 +22,7 @@ def create_vec_by_book(df):
     :return: dict mapping book title -> numpy array of tf-idf vectors
     """
     with open("bow_book.p", 'wb') as file:
-        vecs = {name: TfidfVectorizer().fit_transform(revs['review'].values.astype('U')) for name, revs in
+        vecs = {name: TfidfVectorizer().fit_transform(revs['review_c'].values.astype('U')) for name, revs in
                 df.groupby('book')}
         pickle.dump(vecs, file, protocol=pickle.HIGHEST_PROTOCOL)
 
