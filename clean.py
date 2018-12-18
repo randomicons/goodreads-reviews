@@ -4,6 +4,11 @@ from langdetect.lang_detect_exception import LangDetectException
 
 
 def remove_non_english(df):
+    """
+
+    :param df: dataframes of reviews
+    :return: dataframes that are written in only English
+    """
     # Remove redundant column headers
     df = df[df['book'] != 'book']
     # Does the same as: (but this cannot do exceptions)
@@ -18,12 +23,22 @@ def remove_non_english(df):
 
 
 def remove_html_tags(df):
+    """
+
+    :param df: dataframes of reviews
+    :return: dataframes without html tags
+    """
     from bs4 import BeautifulSoup as bs
     df['review'] = df.apply(lambda x: bs(x['review']).get_text(separator=" ", strip=True), axis=1)
     return df
 
 
 def remove_punct_digit(df):
+    """
+
+    :param df: dataframes of reviews
+    :return: reviews without special characters
+    """
     import re
     df['review_c'] = df['review'].apply(lambda x: re.sub(r"['.*&^%$#@<>+=_~`?!,:;()\-\n\"]", ' ', x.lower()))
     df['review_c'] = df['review_c'].apply(lambda x: re.sub(r"\d+", 'num', x.lower()))

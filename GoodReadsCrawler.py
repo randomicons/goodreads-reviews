@@ -12,7 +12,10 @@ num_revs_per_book = 200
 num_books = 10
 df_revs = pd.DataFrame(columns=["book", "author", "rating", "review"])
 
-
+"""
+Logs in to GoodReads to avoid pop ups
+Then goes to book links and gathers reviews
+"""
 def main():
     userid_str, password_str = (sys.argv[1], sys.argv[2])
     driver = webdriver.Firefox()
@@ -40,7 +43,18 @@ def main():
     df_revs.to_csv("data.csv", mode='a')
 
 
+"""
+Given the book links, it goes through every review and pulls relevant information
+If there are more reviews, it clicks on more and keeps reading them in
+"""
 def get_reviews(book_url, driver, rev_i):
+    """
+
+    :param book_url: url of book
+    :param driver: web driver
+    :param rev_i: number of reviews
+    :return: updates review data frames and returns the number of reviews read
+    """
     driver.get(book_url)
     driver.implicitly_wait(10)
     bookTitle = driver.find_element_by_id("bookTitle").get_attribute("innerHTML")
@@ -90,7 +104,15 @@ def get_reviews(book_url, driver, rev_i):
     return rev_i
 
 
+"""
+Goes to link and gets all the books in the list
+"""
 def create_book_links(driver):
+    """
+
+    :param driver: web driver
+    :return: creates a book list
+    """
     driver.get("https://www.goodreads.com/list/show/50.The_Best_Epic_Fantasy")
     books = driver.find_elements_by_class_name("bookTitle")
     books_href = set()
