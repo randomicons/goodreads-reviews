@@ -13,6 +13,11 @@ num_phrases = 5
 
 
 def top_phrases_summa(revs):
+    """
+    Finds top phrases using TextRank algorithm
+    :param revs: list of reviews
+    :return:
+    """
     rev_combined = "\n".join(revs)
     kws = keywords.keywords(rev_combined, split=True, ratio=.5)
     # Gets only adjectives
@@ -23,6 +28,11 @@ def top_phrases_summa(revs):
 
 
 def top_phrases_rake(revs):
+    """
+    Finds top phrases using RAKE algorithm
+    :param revs:
+    :return:
+    """
     rake = Rake(max_length=2)
     rake.extract_keywords_from_text("\n".join(revs))
     return rake.get_ranked_phrases()
@@ -45,6 +55,11 @@ def assess_polarity1(tokens):
 
 
 def top_phrases_nltk(revs):
+    """
+    Find top phrases by finding collocations using nltk
+    :param revs:
+    :return:
+    """
     revs = '.\n'.join(revs)
     bigram_measures = BigramAssocMeasures()
     tokens = word_tokenize(revs)
@@ -60,10 +75,22 @@ def top_phrases_nltk(revs):
 
 
 def revs_of_phrase(revs, phrases):
+    """
+    Get reviews that contains the phrases
+    :param revs: list of reviews
+    :param phrases: list of phrases
+    :return:  list of reviews
+    """
     return list(filter(lambda rev: any(map(lambda phr: phr in rev, phrases)), revs))
 
 
 def sents_of_phrase(revs, phrases):
+    """
+    Get sentences that contain a phrase in a list phrases
+    :param revs:  list of reviews
+    :param phrases: list of phrases
+    :return: dictionary mapping phrases to reviews
+    """
     sents = [sent for rev in revs for sent in sent_tokenize(rev)]
     phr_sents = {}
     for phr in phrases:
@@ -73,6 +100,10 @@ def sents_of_phrase(revs, phrases):
 
 
 def main():
+    """
+    Find the best keywords to characterize reviews
+    :return: dictionary mapping a book to its key phrases
+    """
     df = pd.read_csv("data.csv", index_col='index')
     # book_sent_map = {}
     book_phrase_map = {}
