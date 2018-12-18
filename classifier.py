@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from keras import Sequential, regularizers
 from keras.layers import Dense
+from keras_preprocessing.text import Tokenizer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, precision_score, recall_score
@@ -16,12 +17,17 @@ def main():
     df = pd.read_csv("data.csv")
     data = run_or_get_pkl("bow_all.p", lambda: to_vec.create_vec_with_all(df))
     y = df['rating'].values
-    X, X_test, y, y_test = train_test_split(data, y, test_size=0.10)
-    logi_reg(X, y, X_test, y_test)
-    random_forest(X, y, X_test, y_test)
-    svm(X, y, X_test, y_test)
+    # X, X_test, y, y_test = train_test_split(data, y, test_size=0.10)
+    # logi_reg(X, y, X_test, y_test)
+    # random_forest(X, y, X_test, y_test)
+    # svm(X, y, X_test, y_test)
+    tokenizer = Tokenizer(num_words=data.shape[1])
+    tokenizer.fit_on_texts(df['review_c'].values)
 
-    # nn(X_keras, y, X_test_keras, y_test)
+    data = tokenizer.texts_to_matrix(df['review_c'].values, mode="tfidf")
+
+    X, X_test, y, y_test = train_test_split(data, y, test_size=0.10)
+    nn(X, y, X_test, y_test)
 
 
 def logi_reg(X, y, X_test, y_test):
@@ -50,10 +56,10 @@ def nn(X, y, X_test, y_test):
     model = Sequential()
     model.add(
         Dense(
-            30,
+            100,
             input_dim=vocab_size,
             kernel_initializer="normal",
-            kernel_regularizer=regularizers.l2(0.01),
+            kernel_regularizer=regularizers.l2(10),
             activation="sigmoid",
         )
     )

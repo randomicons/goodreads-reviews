@@ -34,18 +34,14 @@ def assess_polarity1(tokens):
     :param tokens:
     :return: scores
     """
-
-    total_neg_polarity = 0.0
-    total_pos_polarity = 0.0
+    polarity = 0.0
     for token in tokens:
         syn = list(swn.senti_synsets(token))
         if syn:
             syn = syn[0]
-            total_neg_polarity += syn.neg_score()
-            total_pos_polarity += syn.pos_score()
-    pos_score = total_pos_polarity / len(tokens)
-    neg_score = total_neg_polarity / len(tokens)
-    return pos_score, neg_score
+            polarity += syn.neg_score()
+            polarity += syn.pos_score()
+    return polarity / len(tokens)
 
 
 def top_phrases_nltk(revs):
@@ -78,12 +74,15 @@ def sents_of_phrase(revs, phrases):
 
 def main():
     df = pd.read_csv("data.csv", index_col='index')
-    book_sent_map = {}
+    # book_sent_map = {}
+    book_phrase_map = {}
     for title, revs in df.groupby('book'):
         revs = revs['review'].values
-        phrases = top_phrases_rake(revs)[:5]
-        book_sent_map[title] = sents_of_phrase(revs, phrases)
-    pprint.pprint(book_sent_map)
+        phrases = top_phrases_summa(revs)
+        phrases = sorted(phrases, key=lambda toks: assess_polarity1(word_tokenize(toks)))[:5]
+        # book_sent_map[title] = sents_of_phrase(revs, phrases)
+        book_phrase_map[title] = phrases
+    pprint.pprint(book_phrase_map)
 
 
 if __name__ == "__main__":
