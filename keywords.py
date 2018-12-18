@@ -1,13 +1,13 @@
-import pickle
+import pprint
 
 import pandas as pd
-import umap
 from nltk import pos_tag, BigramCollocationFinder, BigramAssocMeasures
-from nltk.corpus import stopwords
 from nltk import sent_tokenize
 from nltk import word_tokenize
+from nltk.corpus import sentiwordnet as swn
+from nltk.corpus import stopwords
+from rake_nltk import Rake
 from summa import keywords
-from util import run_or_get_pkl, plot
 
 num_phrases = 5
 
@@ -20,6 +20,32 @@ def top_phrases_summa(revs):
         filter(lambda phrase: any(map(lambda w: not w[1].startswith(("NN")), pos_tag(word_tokenize(phrase)))), kws))
     kws = list(filter(lambda phrase: len(word_tokenize(phrase)) > 1, kws))
     return kws
+
+
+def top_phrases_rake(revs):
+    rake = Rake(max_length=2)
+    rake.extract_keywords_from_text("\n".join(revs))
+    return rake.get_ranked_phrases()
+
+
+def assess_polarity1(tokens):
+    """
+    sum polarities and divide by number of tokens
+    :param tokens:
+    :return: scores
+    """
+
+    total_neg_polarity = 0.0
+    total_pos_polarity = 0.0
+    for token in tokens:
+        syn = list(swn.senti_synsets(token))
+        if syn:
+            syn = syn[0]
+            total_neg_polarity += syn.neg_score()
+            total_pos_polarity += syn.pos_score()
+    pos_score = total_pos_polarity / len(tokens)
+    neg_score = total_neg_polarity / len(tokens)
+    return pos_score, neg_score
 
 
 def top_phrases_nltk(revs):
@@ -50,36 +76,14 @@ def sents_of_phrase(revs, phrases):
     return phr_sents
 
 
-def umap_vis():
-    with open('bow_all.p', "rb") as file:
-        X = pickle.load(file)
-
-    df = pd.read_csv("data.csv", index_col='index')
-    umap_feats = run_or_get_pkl(
-        "umap_bow_all.p",
-        lambda: umap.UMAP(n_neighbors=10, min_dist=0.001, n_components=2).fit_transform(X),
-    )
-    frame = pd.DataFrame({"x": umap_feats[:, 0], 'y': umap_feats[:, 1], "label": df['rating'].values})
-    plot(frame)
-
-
-def umap_vis_by_book():
-    with open('bow_book.p', "rb") as file:
-        x_list = pickle.load(file)
-    for title, rest in pd.read_csv("data.csv", index_col='index').groupby('book'):
-        umap_feats = umap.UMAP(n_neighbors=10, min_dist=0.001, n_components=2).fit_transform(x_list[title])
-        frame = pd.DataFrame({"x": umap_feats[:, 0], 'y': umap_feats[:, 1], "label": rest['rating']})
-        plot(frame)
-
-
 def main():
     df = pd.read_csv("data.csv", index_col='index')
     book_sent_map = {}
     for title, revs in df.groupby('book'):
         revs = revs['review'].values
-        phrases = top_phrases_summa(revs)[:5]
+        phrases = top_phrases_rake(revs)[:5]
         book_sent_map[title] = sents_of_phrase(revs, phrases)
-    print(book_sent_map)
+    pprint.pprint(book_sent_map)
 
 
 if __name__ == "__main__":

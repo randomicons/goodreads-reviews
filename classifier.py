@@ -87,14 +87,14 @@ def eval_cv(X, y, model):
     Finds training error and then runs K-Fold Cross Validation
     """
     print(" training accuracy: ", model.fit(X, y).score(X, y))
-    for i in [2, 4]:
-        cv = []
-        for train_index, test_index in KFold(n_splits=i).split(X):
-            # Create train and test set from KFold split
-            X_train, X_test = X[train_index], X[test_index]
-            y_train, y_test = y[train_index], y[test_index]
-            # Calculate test score after fitting decision tree and MLP with given training set
-            cv.append(model.fit(X_train, y_train).score(X_test, y_test))
+    i = 4
+    cv = []
+    for train_index, test_index in KFold(n_splits=i).split(X):
+        # Create train and test set from KFold split
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+        # Calculate test score after fitting decision tree and MLP with given training set
+        cv.append(model.fit(X_train, y_train).score(X_test, y_test))
 
         print("k =", i)
         print("cv accuracy", np.mean(cv))
