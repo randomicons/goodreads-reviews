@@ -4,8 +4,9 @@ from keras import Sequential, regularizers
 from keras.layers import Dense
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from sklearn.model_selection import KFold, GridSearchCV, train_test_split
+from sklearn.metrics import precision_score, recall_score, f1_score, classification_report
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import train_test_split, KFold
 from sklearn.svm import SVC
 
 import to_vec
@@ -132,7 +133,8 @@ def eval(pred, y_test):
     """
     Prints evaluation scores based on predictions and ground truth
     """
-    print("accuracy score: ", accuracy_score(y_test, pred))
+    target_names = ['1 star', '2 star', '3 star', '4 star', '5 star']
+    print("classification report: ", classification_report(y_test, pred, target_names=target_names))
     print("precision score: ", precision_score(y_test, pred, average='weighted'))
     print("recall score: ", recall_score(y_test, pred, average='weighted'))
     print("weighted f1 score: ", f1_score(y_test, pred, average='weighted'))
