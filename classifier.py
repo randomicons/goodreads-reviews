@@ -12,7 +12,9 @@ from sklearn.svm import SVC
 import to_vec
 from util import run_or_get_pkl
 
-
+"""
+Run the learning algorithms
+"""
 def main():
     df = pd.read_csv("data.csv")
     data = run_or_get_pkl("bow_all.p", lambda: to_vec.create_vec_with_all(df))
@@ -31,24 +33,56 @@ def main():
 
 
 def logi_reg(X, y, X_test, y_test):
+    """
+
+    :param X: X training data
+    :param y: y training data
+    :param X_test: X test data
+    :param y_test: Y test data
+    :return: none
+    """
     print("LogisticRegression")
     model = LogisticRegression(class_weight="balanced", multi_class='auto', solver='lbfgs', n_jobs=-1).fit(X, y)
     eval(model.predict(X_test), y_test)
 
 
 def random_forest(X, y, X_test, y_test):
+    """
+
+    :param X: X training data
+    :param y: y training data
+    :param X_test: X test data
+    :param y_test: Y test data
+    :return: none
+    """
     print("random_forest")
     model = RandomForestClassifier(n_estimators=100).fit(X, y)
     eval(model.predict(X_test), y_test)
 
 
 def svm(X, y, X_test, y_test):
+    """
+
+       :param X: X training data
+       :param y: y training data
+       :param X_test: X test data
+       :param y_test: Y test data
+       :return: none
+       """
     print("svm")
     model = SVC(kernel="rbf", gamma="scale", C=0.5).fit(X, y)
     eval(model.predict(X_test), y_test)
 
 
 def nn(X, y, X_test, y_test):
+    """
+
+       :param X: X training data
+       :param y: y training data
+       :param X_test: X test data
+       :param y_test: Y test data
+       :return: none
+       """
     # fit Keras model
     print("Neural Net")
     batch_size = 100
