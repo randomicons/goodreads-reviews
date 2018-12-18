@@ -2,11 +2,10 @@ import numpy as np
 import pandas as pd
 from keras import Sequential, regularizers
 from keras.layers import Dense
-from keras_preprocessing.text import Tokenizer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, precision_score, recall_score
-from sklearn.model_selection import train_test_split, KFold
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.model_selection import KFold, GridSearchCV, train_test_split
 from sklearn.svm import SVC
 
 import to_vec
@@ -15,21 +14,24 @@ from util import run_or_get_pkl
 """
 Run the learning algorithms
 """
+
+
 def main():
     df = pd.read_csv("data.csv")
     data = run_or_get_pkl("bow_all.p", lambda: to_vec.create_vec_with_all(df))
     y = df['rating'].values
+    X, X_test, y_train, y_test = train_test_split(data, y, test_size=0.20)
+    logi_reg(X, y, X_test, y_test)
+    random_forest(X, y, X_test, y_test)
+    svm(X, y, X_test, y_test)
+    svm_grid_search(data, y)
+    # tokenizer = Tokenizer(num_words=data.shape[1])
+    # tokenizer.fit_on_texts(df['review_c'].values)
+    #
+    # data = tokenizer.texts_to_matrix(df['review_c'].values, mode="tfidf")
+    #
     # X, X_test, y, y_test = train_test_split(data, y, test_size=0.10)
-    # logi_reg(X, y, X_test, y_test)
-    # random_forest(X, y, X_test, y_test)
-    # svm(X, y, X_test, y_test)
-    tokenizer = Tokenizer(num_words=data.shape[1])
-    tokenizer.fit_on_texts(df['review_c'].values)
-
-    data = tokenizer.texts_to_matrix(df['review_c'].values, mode="tfidf")
-
-    X, X_test, y, y_test = train_test_split(data, y, test_size=0.10)
-    nn(X, y, X_test, y_test)
+    # nn(X, y, X_test, y_test)
 
 
 def logi_reg(X, y, X_test, y_test):
@@ -70,8 +72,21 @@ def svm(X, y, X_test, y_test):
        :return: none
        """
     print("svm")
-    model = SVC(kernel="rbf", gamma="scale", C=0.5).fit(X, y)
+    model = SVC(kernel="rbf", gamma="scale", C=1, class_weight='balanced').fit(X, y)
+    eval(model.predict(X), y)
     eval(model.predict(X_test), y_test)
+
+
+def svm_grid_search(X, y):
+    param_grid = [
+        {'C': [1, .01, .05], 'kernel': ['linear']},
+        {'C': [1, .01, .05], 'kernel': ['rbf']},
+    ]
+    svc = SVC(gamma='scale', class_weight='balanced')
+    clf = GridSearchCV(svc, param_grid, cv=4, n_jobs=-1, scoring='f1_weighted')
+    clf.fit(X, y)
+    print(clf.get_params())
+    print(clf.score(X, y))
 
 
 def nn(X, y, X_test, y_test):
@@ -120,6 +135,7 @@ def eval(pred, y_test):
     print("accuracy score: ", accuracy_score(y_test, pred))
     print("precision score: ", precision_score(y_test, pred, average='weighted'))
     print("recall score: ", recall_score(y_test, pred, average='weighted'))
+    print("weighted f1 score: ", f1_score(y_test, pred, average='weighted'))
 
 
 def eval_cv(X, y, model):
